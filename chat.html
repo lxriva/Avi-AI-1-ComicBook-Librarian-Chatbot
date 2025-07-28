@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comic Book Librarian Chatbot</title>
+</head>
+
+<body>
+  <div class="header">
+    <h1>📚 Comic Book Librarian</h1>
+    <p>Your expert guide to Marvel & DC Comics universe</p>
+  </div>
+
+  <div class="chat-container">
+    <div id="chat">
+      <div class="message bot">
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+          <strong>Librarian:</strong> Welcome! I'm your comic book expert. Ask me anything about Marvel and DC comics,
+          characters, storylines, or publication history. How can I help you today?
+        </div>
+      </div>
+    </div>
+
+    <div class="input-container">
+      <input type="text" id="userInput" placeholder="Ask about Watchmen, Spider-Man, Batman, or any comic topic...">
+      <button class="send-button" onclick="sendMessage()">
+        <span>Send</span>
+        <span>📨</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="message-avatar">🤖</div>
+    <span>Librarian is thinking</span>
+    <div class="loading-dots">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById("userInput");
+    const chat = document.getElementById("chat");
+    const loading = document.getElementById("loading");
+
+    // Allow pressing Enter to send message
+    input.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const question = input.value.trim();
+      if (!question) return;
+
+      // Add user message
+      const userMessage = document.createElement('div');
+      userMessage.className = 'message user';
+      userMessage.innerHTML = `
+        <div class="message-avatar">👤</div>
+        <div class="message-content"><strong>You:</strong> ${escapeHtml(question)}</div>
+      `;
+      chat.appendChild(userMessage);
+
+      input.value = "";
+
+      // Show loading indicator
+      loading.style.display = 'flex';
+      chat.scrollTop = chat.scrollHeight;
+
+      try {
+        const res = await fetch("http://localhost:5000/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+
+        loading.style.display = 'none';
+
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        const botMessage = document.createElement('div');
+        botMessage.className = data.answer ? 'message bot' : 'message bot error';
+
+        const responseText = data.answer || `Error: ${data.error || 'Unknown error occurred'}`;
+
+        botMessage.innerHTML = `
+          <div class="message-avatar">${data.answer ? '🤖' : '❌'}</div>
+          <div class="message-content">
+            <strong>Librarian:</strong> ${escapeHtml(responseText)}
+          </div>
+        `;
+
+        chat.appendChild(botMessage);
+
+      } catch (err) {
+        loading.style.display = 'none';
+
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'message bot error';
+        errorMessage.innerHTML = `
+          <div class="message-avatar">❌</div>
+          <div class="message-content">
+            <strong>Connection Error:</strong> ${escapeHtml(err.message)}
+          </div>
+        `;
+        chat.appendChild(errorMessage);
+      }
+
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Focus input on page load
+    window.addEventListener('load', () => {
+      input.focus();
+    });
+  </script>
+</body>
+
+</html>
