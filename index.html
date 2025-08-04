@@ -77,7 +77,7 @@
       chat.scrollTop = chat.scrollHeight;
 
       try {
-        const res = await fetch("http://localhost:5000/ask", {
+        const res = await fetch("https://avi-ai-1-comicbook-librarian-chatbot-production.up.railway.app/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question })
