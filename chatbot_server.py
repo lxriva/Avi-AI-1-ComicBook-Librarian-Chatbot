@@ -1,22 +1,20 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
+import os
+
+# Load env variables
+load_dotenv()
+
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 
-# Setup
-import os
-
-llm = ChatOpenAI(model_name="gpt-4", temperature=0)
-
-from dotenv import load_dotenv
-load_dotenv()
-
+# Setup Flask app
 app = Flask(__name__)
 
-from flask_cors import CORS
-
+# ✅ CORS: Allow GitHub Pages frontend
 CORS(app, resources={r"/*": {"origins": "https://lxriva.github.io"}})
 
 @app.after_request
@@ -46,14 +44,6 @@ Librarian:
 """
 )
 
-# RAG chain
-qa_chain = RetrievalQA.from_chain_type(
-    llm=ChatOpenAI(model_name="gpt-3.5-turbo"),
-    retriever=retriever,
-    chain_type="stuff",
-    chain_type_kwargs={"prompt": prompt_template}
-)
-
 @app.route("/ask", methods=["POST"])
 def ask():
     data = request.json
@@ -62,12 +52,18 @@ def ask():
         return jsonify({"error": "Missing question"}), 400
 
     try:
+        llm = ChatOpenAI(model_name="gpt-4", temperature=0)  # ✅ Initialize inside request
+        qa_chain = RetrievalQA.from_chain_type(
+            llm=llm,
+            retriever=retriever,
+            chain_type="stuff",
+            chain_type_kwargs={"prompt": prompt_template}
+        )
         answer = qa_chain.run(query)
         return jsonify({"answer": answer})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Use Railway’s assigned port
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
