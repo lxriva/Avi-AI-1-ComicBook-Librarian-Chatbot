@@ -5,26 +5,14 @@ import os
 import sys
 import traceback
 
-# Load environment variables
+# Load environment variables (only needed locally)
 load_dotenv()
 
 # Setup Flask app
 app = Flask(__name__)
 
-# CORS configuration - more explicit
-CORS(app, 
-     origins=["https://lxriva.github.io", "http://localhost:3000", "http://127.0.0.1:3000"],
-     methods=["GET", "POST", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"],
-     supports_credentials=False)
-
-# Add explicit CORS headers to all responses
-@app.after_request
-def after_request(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://lxriva.github.io')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    return response
+# ✅ BRUTE-FORCE CORS: Allow all origins, all methods, all headers
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Global variables for lazy loading
 faiss_db = None
@@ -57,16 +45,6 @@ def initialize_ai_components():
         print(f"Traceback: {traceback.format_exc()}")
         return False
 
-# Handle preflight requests
-@app.before_request
-def handle_preflight():
-    if request.method == "OPTIONS":
-        response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-        response.headers.add('Access-Control-Allow-Methods', "GET,POST,OPTIONS")
-        return response
-
 @app.route("/", methods=["GET"])
 def health_check():
     return jsonify({
@@ -77,9 +55,7 @@ def health_check():
 
 @app.route("/debug", methods=["GET"])
 def debug():
-    # Check if AI components can be initialized
     ai_status = initialize_ai_components()
-    
     return jsonify({
         "status": "Railway server is running",
         "environment": {
@@ -101,7 +77,6 @@ def debug():
 @app.route("/ask", methods=["POST"])
 def ask():
     try:
-        # Check request data
         if not request.json:
             return jsonify({"error": "No JSON data provided"}), 400
             
@@ -111,22 +86,18 @@ def ask():
         if not query:
             return jsonify({"error": "Missing question field"}), 400
         
-        # Check OpenAI API key
         if not os.environ.get("OPENAI_API_KEY"):
             return jsonify({"error": "OpenAI API key not configured"}), 500
         
-        # Initialize AI components if not already done
         if not initialize_ai_components():
             return jsonify({
                 "error": "AI components failed to initialize. This might be due to missing FAISS index files."
             }), 500
         
-        # Import here to avoid issues if packages aren't available
         from langchain_openai import ChatOpenAI
         from langchain.chains import RetrievalQA
         from langchain.prompts import PromptTemplate
         
-        # Create prompt template
         prompt_template = PromptTemplate.from_template(
             """
 You are a helpful and enthusiastic Comics librarian. You love all comics and love giving deeply thought-out responses.
@@ -141,7 +112,6 @@ Librarian:
         
         print(f"Processing question: {query}")
         
-        # Initialize LLM
         llm = ChatOpenAI(model_name="gpt-4", temperature=0)
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
@@ -156,27 +126,4 @@ Librarian:
         return jsonify({"answer": answer})
         
     except Exception as e:
-        error_msg = f"Error processing request: {str(e)}"
-        print(error_msg)
-        print(f"Traceback: {traceback.format_exc()}")
-        
-        return jsonify({
-            "error": error_msg,
-            "type": type(e).__name__
-        }), 500
-
-# Standard Railway port handling
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))  # Default to 8080 for Railway
-    print(f"Starting server on port {port}")
-    print(f"Environment PORT: {os.environ.get('PORT', 'Not set')}")
-    print(f"Current working directory: {os.getcwd()}")
-    print(f"Files in directory: {os.listdir('.')}")
-    
-    # Use gunicorn in production, Flask dev server locally
-    if os.environ.get("RAILWAY_ENVIRONMENT"):
-        # Production on Railway
-        app.run(host="0.0.0.0", port=port, debug=False)
-    else:
-        # Local development
-        app.run(host="0.0.0.0", port=port, debug=True)
+        error_msg =_
