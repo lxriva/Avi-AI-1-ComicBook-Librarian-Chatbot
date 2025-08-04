@@ -3,7 +3,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 import os
 
-# Load env variables
+# Load environment variables (e.g., OPENAI_API_KEY)
 load_dotenv()
 
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
@@ -14,22 +14,15 @@ from langchain.prompts import PromptTemplate
 # Setup Flask app
 app = Flask(__name__)
 
-# ✅ CORS: Allow GitHub Pages frontend
-CORS(app, resources={r"/*": {"origins": "https://lxriva.github.io"}})
+# ✅ Correct CORS: Allow GitHub Pages frontend
+CORS(app, origins=["https://lxriva.github.io"], supports_credentials=False)
 
-@app.after_request
-def add_cors_headers(response):
-    response.headers["Access-Control-Allow-Origin"] = "https://lxriva.github.io"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-    return response
-
-# Load FAISS index
+# Load FAISS index for retrieval
 embedding = OpenAIEmbeddings()
 faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
 retriever = faiss_db.as_retriever()
 
-# Create prompt
+# Create prompt template
 prompt_template = PromptTemplate.from_template(
     """
 You are a helpful and enthusiastic Comics librarian. You love all comics and love giving deeply thought-out responses.
@@ -52,7 +45,8 @@ def ask():
         return jsonify({"error": "Missing question"}), 400
 
     try:
-        llm = ChatOpenAI(model_name="gpt-4", temperature=0)  # ✅ Initialize inside request
+        # Initialize LLM on request — ensures env is loaded
+        llm = ChatOpenAI(model_name="gpt-4", temperature=0)
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             retriever=retriever,
@@ -64,6 +58,7 @@ def ask():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# Standard Railway port handling
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
