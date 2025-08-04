@@ -16,7 +16,9 @@ load_dotenv()
 
 
 app = Flask(__name__)
-CORS(app)  # 🔥 Enables CORS for all routes
+
+CORS(app, origins=["https://lxriva.github.io"])
+
 
 # Load FAISS index
 embedding = OpenAIEmbeddings()
