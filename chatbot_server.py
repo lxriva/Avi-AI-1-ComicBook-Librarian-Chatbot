@@ -17,7 +17,10 @@ load_dotenv()
 
 app = Flask(__name__)
 
-CORS(app, origins=["https://lxriva.github.io"])
+from flask_cors import CORS
+
+# ✅ Allow GitHub Pages frontend
+CORS(app, resources={r"/ask": {"origins": "https://lxriva.github.io"}})
 
 
 # Load FAISS index
