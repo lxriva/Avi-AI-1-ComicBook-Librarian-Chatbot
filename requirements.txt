@@ -2,5 +2,9 @@ flask
 flask-cors
 openai
 langchain
+langchain-openai
 faiss-cpu
 python-dotenv
+tqdm
+numpy
+gunicorn
