@@ -10,18 +10,21 @@ import os
 
 llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
-
 from dotenv import load_dotenv
 load_dotenv()
-
 
 app = Flask(__name__)
 
 from flask_cors import CORS
 
-# ✅ Allow GitHub Pages frontend
-CORS(app, resources={r"/ask": {"origins": "https://lxriva.github.io"}})
+CORS(app, resources={r"/*": {"origins": "https://lxriva.github.io"}})
 
+@app.after_request
+def add_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "https://lxriva.github.io"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+    return response
 
 # Load FAISS index
 embedding = OpenAIEmbeddings()
