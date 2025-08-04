@@ -11,11 +11,20 @@ load_dotenv()
 # Setup Flask app
 app = Flask(__name__)
 
-# CORS configuration
+# CORS configuration - more explicit
 CORS(app, 
      origins=["https://lxriva.github.io", "http://localhost:3000", "http://127.0.0.1:3000"],
      methods=["GET", "POST", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"])
+     allow_headers=["Content-Type", "Authorization"],
+     supports_credentials=False)
+
+# Add explicit CORS headers to all responses
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://lxriva.github.io')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
 
 # Global variables for lazy loading
 faiss_db = None
@@ -53,9 +62,9 @@ def initialize_ai_components():
 def handle_preflight():
     if request.method == "OPTIONS":
         response = make_response()
-        response.headers.add("Access-Control-Allow-Origin", "https://lxriva.github.io")
+        response.headers.add("Access-Control-Allow-Origin", "*")
         response.headers.add('Access-Control-Allow-Headers', "Content-Type,Authorization")
-        response.headers.add('Access-Control-Allow-Methods', "GET,PUT,POST,DELETE,OPTIONS")
+        response.headers.add('Access-Control-Allow-Methods', "GET,POST,OPTIONS")
         return response
 
 @app.route("/", methods=["GET"])
