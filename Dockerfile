@@ -4,8 +4,14 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Copy files
+# Copy all files
 COPY . .
+
+# Explicitly ensure comicvine_index folder is copied
+COPY comicvine_index /app/comicvine_index
+
+# Debug: list contents of FAISS folder during build
+RUN ls -l /app/comicvine_index
 
 # Install dependencies
 RUN pip install --upgrade pip
