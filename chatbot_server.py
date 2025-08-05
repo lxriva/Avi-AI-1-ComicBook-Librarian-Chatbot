@@ -12,7 +12,15 @@ load_dotenv()
 app = Flask(__name__)
 
 # ✅ BRUTE-FORCE CORS: Allow all origins, all methods, all headers
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=False)
+
+# ✅ EXTRA: Force CORS headers on every response (even OPTIONS)
+@app.after_request
+def ensure_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+    return response
 
 # Global variables for lazy loading
 faiss_db = None
@@ -20,7 +28,6 @@ retriever = None
 embedding = None
 
 def initialize_ai_components():
-    """Initialize AI components with error handling"""
     global faiss_db, retriever, embedding
     
     if faiss_db is not None:
@@ -29,17 +36,13 @@ def initialize_ai_components():
     try:
         from langchain_openai import OpenAIEmbeddings
         from langchain_community.vectorstores import FAISS
-        
         print("Initializing OpenAI embeddings...")
         embedding = OpenAIEmbeddings()
-        
         print("Loading FAISS index...")
         faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
         retriever = faiss_db.as_retriever()
-        
         print("✅ AI components initialized successfully!")
         return True
-        
     except Exception as e:
         print(f"❌ Error initializing AI components: {str(e)}")
         print(f"Traceback: {traceback.format_exc()}")
@@ -126,4 +129,21 @@ Librarian:
         return jsonify({"answer": answer})
         
     except Exception as e:
-        error_msg =_
+        error_msg = f"Error processing request: {str(e)}"
+        print(error_msg)
+        print(f"Traceback: {traceback.format_exc()}")
+        
+        return jsonify({
+            "error": error_msg,
+            "type": type(e).__name__
+        }), 500
+
+# Standard Railway port handling
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8080))
+    print(f"Starting server on port {port}")
+    
+    if os.environ.get("RAILWAY_ENVIRONMENT"):
+        app.run(host="0.0.0.0", port=port, debug=False)
+    else:
+        app.run(host="0.0.0.0", port=port, debug=True)
