@@ -138,12 +138,10 @@ Librarian:
             "type": type(e).__name__
         }), 500
 
-# Standard Railway port handling
+# ✅ Proper Railway port handling + Gunicorn-compatible
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     print(f"Starting server on port {port}")
     
-    if os.environ.get("RAILWAY_ENVIRONMENT"):
-        app.run(host="0.0.0.0", port=port, debug=False)
-    else:
-        app.run(host="0.0.0.0", port=port, debug=True)
+    # Use Flask for local dev, Gunicorn for Railway
+    app.run(host="0.0.0.0", port=port, debug=not bool(os.environ.get("RAILWAY_ENVIRONMENT")))
