@@ -36,15 +36,33 @@ def initialize_ai_components():
 
         print("🔄 Initializing OpenAI embeddings...")
         api_key = os.environ.get("OPENAI_API_KEY")
-        print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key) if api_key else 0}")
+        if not api_key:
+            print("❌ OPENAI_API_KEY not found in environment variables")
+            return False
+            
+        print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key)}")
 
-        embedding = OpenAIEmbeddings(
-            model="text-embedding-3-small"
-        )
+        # Explicitly pass the API key to avoid pydantic validation errors
+        try:
+            embedding = OpenAIEmbeddings(
+                model="text-embedding-3-small",
+                openai_api_key=api_key
+            )
+            print("✅ OpenAI embeddings initialized successfully!")
+        except Exception as e:
+            print(f"❌ Failed to initialize OpenAI embeddings: {str(e)}")
+            print(f"❌ Exception type: {type(e).__name__}")
+            return False
 
         print("🔄 Loading FAISS index...")
-        faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
-        retriever = faiss_db.as_retriever()
+        try:
+            faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
+            retriever = faiss_db.as_retriever()
+            print("✅ FAISS index loaded successfully!")
+        except Exception as e:
+            print(f"❌ Failed to load FAISS index: {str(e)}")
+            print(f"❌ Exception type: {type(e).__name__}")
+            return False
 
         print("✅ AI components initialized successfully!")
         return True
