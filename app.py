@@ -35,6 +35,9 @@ def initialize_ai_components():
         from langchain_community.vectorstores import FAISS
 
         print("🔄 Initializing OpenAI embeddings...")
+        api_key = os.environ.get("OPENAI_API_KEY")
+        print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key) if api_key else 0}")
+
         embedding = OpenAIEmbeddings.from_api_key(
         os.environ.get("OPENAI_API_KEY"),
         model="text-embedding-3-small"
