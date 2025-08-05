@@ -38,12 +38,9 @@ def initialize_ai_components():
         api_key = os.environ.get("OPENAI_API_KEY")
         print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key) if api_key else 0}")
 
-        embedding = OpenAIEmbeddings.from_api_key(
-        os.environ.get("OPENAI_API_KEY"),
-        model="text-embedding-3-small"
+        embedding = OpenAIEmbeddings(
+            model="text-embedding-3-small"
         )
-
-
 
         print("🔄 Loading FAISS index...")
         faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
