@@ -35,32 +35,20 @@ def initialize_ai_components():
         from langchain_community.vectorstores import FAISS
 
         print("🔄 Initializing OpenAI embeddings...")
-        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
+        api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             print("❌ OPENAI_API_KEY not found in environment variables")
             return False
 
         print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key)}")
 
-        # Set the key explicitly in the environment to ensure it’s used internally
+        # Set API key properly for OpenAIEmbeddings
         os.environ["OPENAI_API_KEY"] = api_key
-        try:
-            embedding = OpenAIEmbeddings(model="text-embedding-3-small")
-            print("✅ OpenAI embeddings initialized successfully!")
-        except Exception as e:
-            print(f"❌ Failed to initialize OpenAI embeddings: {str(e)}")
-            print(f"❌ Exception type: {type(e).__name__}")
-            return False
+        embedding = OpenAIEmbeddings(model="text-embedding-3-small")
 
         print("🔄 Loading FAISS index...")
-        try:
-            faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
-            retriever = faiss_db.as_retriever()
-            print("✅ FAISS index loaded successfully!")
-        except Exception as e:
-            print(f"❌ Failed to load FAISS index: {str(e)}")
-            print(f"❌ Exception type: {type(e).__name__}")
-            return False
+        faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
+        retriever = faiss_db.as_retriever()
 
         print("✅ AI components initialized successfully!")
         return True
