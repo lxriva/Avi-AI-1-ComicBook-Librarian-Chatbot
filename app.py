@@ -35,19 +35,17 @@ def initialize_ai_components():
         from langchain_community.vectorstores import FAISS
 
         print("🔄 Initializing OpenAI embeddings...")
-        api_key = os.environ.get("OPENAI_API_KEY")
+        api_key = os.environ.get("OPENAI_API_KEY", "").strip()
         if not api_key:
             print("❌ OPENAI_API_KEY not found in environment variables")
             return False
-            
+
         print(f"🔐 API Key: {api_key[:6]}...{api_key[-4:]} length={len(api_key)}")
 
-        # Explicitly pass the API key to avoid pydantic validation errors
+        # Set the key explicitly in the environment to ensure it’s used internally
+        os.environ["OPENAI_API_KEY"] = api_key
         try:
-            embedding = OpenAIEmbeddings(
-                model="text-embedding-3-small",
-                openai_api_key=api_key
-            )
+            embedding = OpenAIEmbeddings(model="text-embedding-3-small")
             print("✅ OpenAI embeddings initialized successfully!")
         except Exception as e:
             print(f"❌ Failed to initialize OpenAI embeddings: {str(e)}")
