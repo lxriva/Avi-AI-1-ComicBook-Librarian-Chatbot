@@ -128,6 +128,10 @@ def debug():
             "error": f"Debug endpoint error: {str(e)}",
             "traceback": traceback.format_exc()
         }), 500
+         
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({"status": "Comic Librarian backend is alive!"})
 
 @app.route("/ask", methods=["POST", "OPTIONS"])
 def ask():
