@@ -75,10 +75,11 @@
 
     try {
       const res = await fetch("https://avi-comicbook-librarian-chatbot-1024446027344.europe-west1.run.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question })
-      });
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })  
+    })
+
 
       loading.style.display = 'none';
 
