@@ -45,7 +45,16 @@ def initialize_ai_components():
         # Set API key properly for OpenAIEmbeddings
         os.environ["OPENAI_API_KEY"] = api_key
         try:
-            embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
+            print("🧪 Step A: About to create OpenAIEmbeddings with text-embedding-3-small")
+            try:
+                embedding = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=api_key)
+                print("✅ OpenAIEmbeddings initialized successfully.")
+            except Exception as e:
+                print("❌ Step B: Embedding creation failed.")
+                print(f"❌ Exception: {str(e)}")
+                traceback.print_exc()
+                return False
+
             print("✅ OpenAIEmbeddings initialized successfully.")
         except Exception as e:
             print(f"❌ Failed to initialize OpenAIEmbeddings: {str(e)}")
