@@ -44,95 +44,93 @@
     </div>
   </div>
 
-  <script>
-    const input = document.getElementById("userInput");
-    const chat = document.getElementById("chat");
-    const loading = document.getElementById("loading");
+  <!-- ... above HTML remains unchanged ... -->
 
-    // Allow pressing Enter to send message
-    input.addEventListener("keydown", function (event) {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        sendMessage();
+<script>
+  const input = document.getElementById("userInput");
+  const chat = document.getElementById("chat");
+  const loading = document.getElementById("loading");
+
+  input.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      sendMessage();
+    }
+  });
+
+  async function sendMessage() {
+    const question = input.value.trim();
+    if (!question) return;
+
+    const userMessage = document.createElement('div');
+    userMessage.className = 'message user';
+    userMessage.innerHTML = `
+      <div class="message-avatar">👤</div>
+      <div class="message-content"><strong>You:</strong> ${escapeHtml(question)}</div>
+    `;
+    chat.appendChild(userMessage);
+
+    input.value = "";
+
+    loading.style.display = 'flex';
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const res = await fetch("https://your-cloud-run-url.a.run.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      loading.style.display = 'none';
+
+      if (!res.ok) {
+        throw new Error(`Server error: ${res.status}`);
       }
-    });
 
-    async function sendMessage() {
-      const question = input.value.trim();
-      if (!question) return;
+      const data = await res.json();
 
-      // Add user message
-      const userMessage = document.createElement('div');
-      userMessage.className = 'message user';
-      userMessage.innerHTML = `
-        <div class="message-avatar">👤</div>
-        <div class="message-content"><strong>You:</strong> ${escapeHtml(question)}</div>
+      const botMessage = document.createElement('div');
+      botMessage.className = data.answer ? 'message bot' : 'message bot error';
+
+      const responseText = data.answer || `Error: ${data.error || 'Unknown error occurred'}`;
+
+      botMessage.innerHTML = `
+        <div class="message-avatar">${data.answer ? '🤖' : '❌'}</div>
+        <div class="message-content">
+          <strong>Librarian:</strong> ${escapeHtml(responseText)}
+        </div>
       `;
-      chat.appendChild(userMessage);
 
-      input.value = "";
+      chat.appendChild(botMessage);
 
-      // Show loading indicator
-      loading.style.display = 'flex';
-      chat.scrollTop = chat.scrollHeight;
+    } catch (err) {
+      loading.style.display = 'none';
 
-      try {
-        const res = await fetch("https://avi-ai-1-comicbook-librarian-chatbot-production.up.railway.app/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question })
-        });
-
-        loading.style.display = 'none';
-
-        if (!res.ok) {
-          throw new Error(`Server error: ${res.status}`);
-        }
-
-        const data = await res.json();
-
-        const botMessage = document.createElement('div');
-        botMessage.className = data.answer ? 'message bot' : 'message bot error';
-
-        const responseText = data.answer || `Error: ${data.error || 'Unknown error occurred'}`;
-
-        botMessage.innerHTML = `
-          <div class="message-avatar">${data.answer ? '🤖' : '❌'}</div>
-          <div class="message-content">
-            <strong>Librarian:</strong> ${escapeHtml(responseText)}
-          </div>
-        `;
-
-        chat.appendChild(botMessage);
-
-      } catch (err) {
-        loading.style.display = 'none';
-
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'message bot error';
-        errorMessage.innerHTML = `
-          <div class="message-avatar">❌</div>
-          <div class="message-content">
-            <strong>Connection Error:</strong> ${escapeHtml(err.message)}
-          </div>
-        `;
-        chat.appendChild(errorMessage);
-      }
-
-      chat.scrollTop = chat.scrollHeight;
+      const errorMessage = document.createElement('div');
+      errorMessage.className = 'message bot error';
+      errorMessage.innerHTML = `
+        <div class="message-avatar">❌</div>
+        <div class="message-content">
+          <strong>Connection Error:</strong> ${escapeHtml(err.message)}
+        </div>
+      `;
+      chat.appendChild(errorMessage);
     }
 
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
+    chat.scrollTop = chat.scrollHeight;
+  }
 
-    // Focus input on page load
-    window.addEventListener('load', () => {
-      input.focus();
-    });
-  </script>
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  window.addEventListener('load', () => {
+    input.focus();
+  });
+</script>
 </body>
 
 </html>
