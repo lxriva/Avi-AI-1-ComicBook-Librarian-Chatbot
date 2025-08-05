@@ -44,7 +44,14 @@ def initialize_ai_components():
 
         # Set API key properly for OpenAIEmbeddings
         os.environ["OPENAI_API_KEY"] = api_key
-        embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
+        try:
+            embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
+            print("✅ OpenAIEmbeddings initialized successfully.")
+        except Exception as e:
+            print(f"❌ Failed to initialize OpenAIEmbeddings: {str(e)}")
+            traceback.print_exc()
+            return False
+
 
         print("🔄 Loading FAISS index...")
         faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
@@ -149,8 +156,19 @@ Librarian:
             chain_type_kwargs={"prompt": prompt_template}
         )
 
-        answer = qa_chain.run(query)
-        return jsonify({"answer": answer})
+        try:
+            print("⚙️ Running qa_chain...")
+            answer = qa_chain.run(query)
+            print(f"✅ Answer: {answer}")
+            return jsonify({"answer": answer})
+        except Exception as e:
+            print(f"❌ Error in qa_chain: {str(e)}")
+            traceback.print_exc()
+            return jsonify({
+                "error": f"LLM failed to process: {str(e)}",
+                "traceback": traceback.format_exc()
+            }), 500
+
 
     except Exception as e:
         return jsonify({
