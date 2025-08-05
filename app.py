@@ -73,7 +73,7 @@ def initialize_ai_components():
         print("Make sure all dependencies are installed")
         return False
     except Exception as e:
-        print("❌ Error initializing AI components:"
+        print("❌ Error initializing AI components:")
 	   traceback.print_exc()
         return False
 
