@@ -35,7 +35,7 @@ def initialize_ai_components():
         from langchain_community.vectorstores import FAISS
 
         print("🔄 Initializing OpenAI embeddings...")
-        embedding = OpenAIEmbeddings()
+        embedding = OpenAIEmbeddings(openai_api_key=os.environ.get("OPENAI_API_KEY"))
 
         print("🔄 Loading FAISS index...")
         faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
