@@ -73,8 +73,8 @@ def initialize_ai_components():
         print("Make sure all dependencies are installed")
         return False
     except Exception as e:
-        print(f"❌ Error initializing AI components: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
+        print("❌ Error initializing AI components:"
+	   traceback.print_exc()
         return False
 
 @app.route("/", methods=["GET"])
@@ -83,7 +83,8 @@ def health_check():
         return jsonify({
             "status": "Comic Librarian is running!",
             "version": "1.0",
-            "environment": "Railway" if os.environ.get("RAILWAY_ENVIRONMENT") else "Local",
+            env = os.environ.get("RAILWAY_ENVIRONMENT")
+            "environment": env if env else "Cloud Run",
             "timestamp": str(os.popen('date').read().strip()) if os.name != 'nt' else "Windows"
         })
     except Exception as e:
