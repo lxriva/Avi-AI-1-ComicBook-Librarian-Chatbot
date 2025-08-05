@@ -1,11 +1,11 @@
 flask
 flask-cors
-openai
+gunicorn
 langchain
 langchain-openai
 langchain-community
 faiss-cpu
+openai
 python-dotenv
 tqdm
 numpy
-gunicorn
