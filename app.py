@@ -7,6 +7,8 @@ import traceback
 import logging
 from pydantic.v1 import ValidationError        
 import faiss
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import FAISS   
 
 
 # Setup logging to ensure logs appear in Cloud Run
@@ -50,9 +52,6 @@ def initialize_ai_components():
             logger.debug("\u274C FAISS index directory 'comicvine_index' not found")
             return False
 
-        from langchain_openai import OpenAIEmbeddings
-        from langchain_community.vectorstores import FAISS
-
         # Log FAISS version
         logger.debug(f"\U0001F50E FAISS version: {faiss.__version__}")
 
@@ -66,7 +65,7 @@ def initialize_ai_components():
         logger.debug(f"\U0001F512 API Key present, length={len(api_key)}, value={api_key[:6]}...{api_key[-4:]}")
 
         try:
-            embedding = OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)
+            embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
             logger.debug("\u2705 OpenAIEmbeddings initialized.")
         except ValidationError as ve:
             logger.debug(f"\u274C ValidationError during embedding init: {ve}")
