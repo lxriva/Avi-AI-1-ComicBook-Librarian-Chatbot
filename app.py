@@ -51,6 +51,10 @@ def initialize_ai_components():
         from langchain_openai import OpenAIEmbeddings
         from langchain_community.vectorstores import FAISS
 
+        # Log FAISS version
+        import faiss
+        logger.debug(f"\U0001F50E FAISS version: {faiss.__version__}")
+
         logger.debug("\U0001FAAA Step A: Preparing to initialize OpenAI embeddings...")
 
         api_key = os.environ.get("OPENAI_API_KEY")
