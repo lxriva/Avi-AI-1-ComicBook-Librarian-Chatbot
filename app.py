@@ -5,7 +5,9 @@ import os
 import sys
 import traceback
 import logging
-from pydantic.v1 import ValidationError
+from pydantic.v1 import ValidationError        
+import faiss
+
 
 # Setup logging to ensure logs appear in Cloud Run
 logging.basicConfig(
@@ -52,7 +54,6 @@ def initialize_ai_components():
         from langchain_community.vectorstores import FAISS
 
         # Log FAISS version
-        import faiss
         logger.debug(f"\U0001F50E FAISS version: {faiss.__version__}")
 
         logger.debug("\U0001FAAA Step A: Preparing to initialize OpenAI embeddings...")
