@@ -96,7 +96,7 @@ def initialize_ai_components():
                     logger.debug("✅ OpenAIEmbeddings initialized with ada-002.")
                     
                 except Exception as ada_e:
-                    logger.debug(f"❌ All embedding initialization methods failed.")
+                    logger.debug("❌ All embedding initialization methods failed.")
                     logger.debug(f"Basic error: {basic_e}")
                     logger.debug(f"Explicit error: {explicit_e}")
                     logger.debug(f"Ada error: {ada_e}")
@@ -170,7 +170,6 @@ def debug():
         except:
             pass
         
-        # Try to initialize AI components (but don't fail if it doesn't work)
         ai_status = False
         try:
             ai_status = initialize_ai_components()
@@ -211,22 +210,18 @@ def debug():
 
 @app.route("/test-embedding", methods=["GET"])
 def test_embedding():
-    """Test embedding initialization without FAISS"""
     try:
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             return jsonify({"error": "No API key found"}), 400
         
-        # Try to create a simple embedding
         test_embedding = OpenAIEmbeddings(model="text-embedding-3-small")
-        
-        # Try to embed a simple text
         result = test_embedding.embed_query("test")
         
         return jsonify({
             "status": "success",
             "embedding_length": len(result),
-            "sample": result[:5]  # First 5 dimensions
+            "sample": result[:5]
         })
         
     except Exception as e:
@@ -315,6 +310,4 @@ def favicon():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     debug_mode = not bool(os.environ.get("RAILWAY_ENVIRONMENT"))
-    
-    # Use a more conservative gunicorn configuration
     app.run(host="0.0.0.0", port=port, debug=debug_mode, threaded=True)
