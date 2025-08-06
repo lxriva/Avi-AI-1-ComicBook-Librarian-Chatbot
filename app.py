@@ -68,7 +68,11 @@ def initialize_ai_components():
             embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
             logger.debug("\u2705 OpenAIEmbeddings initialized.")
         except ValidationError as ve:
-            logger.debug(f"\u274C ValidationError during embedding init: {ve}")
+            logger.debug("\u274C ValidationError during embedding init:")
+            logger.debug(f"Type: {type(ve)}")
+            logger.debug(f"Raw error: {ve}")
+            logger.debug(f"Errors list: {ve.errors()}")
+            logger.debug(f"Model fields: {ve.model.__fields__ if hasattr(ve, 'model') else 'No model fields'}")
             traceback.print_exc()
             return False
         except Exception as e:
