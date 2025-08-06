@@ -4,6 +4,18 @@ from dotenv import load_dotenv
 import os
 import sys
 import traceback
+import logging
+
+# Setup logging to ensure logs appear in Cloud Run
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -21,48 +33,48 @@ embedding = None
 def initialize_ai_components():
     global faiss_db, retriever, embedding
 
-    print("\U0001F7E2 initialize_ai_components() called.")
+    logger.debug("\U0001F7E2 initialize_ai_components() called.")
 
     if faiss_db is not None:
-        print("\u2705 FAISS already initialized.")
+        logger.debug("\u2705 FAISS already initialized.")
         return True
 
     try:
-        print("\uD83D\uDD04 Starting AI component initialization...")
+        logger.debug("\uD83D\uDD04 Starting AI component initialization...")
 
         if not os.path.exists("comicvine_index"):
-            print("\u274C FAISS index directory 'comicvine_index' not found")
+            logger.debug("\u274C FAISS index directory 'comicvine_index' not found")
             return False
 
         from langchain_openai import OpenAIEmbeddings
         from langchain_community.vectorstores import FAISS
 
-        print("\U0001FAAA Step A: Preparing to initialize OpenAI embeddings...")
+        logger.debug("\U0001FAAA Step A: Preparing to initialize OpenAI embeddings...")
 
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
-            print("\u274C OPENAI_API_KEY not found.")
+            logger.debug("\u274C OPENAI_API_KEY not found.")
             return False
 
-        print(f"\U0001F512 API Key present, length={len(api_key)}")
+        logger.debug(f"\U0001F512 API Key present, length={len(api_key)}")
 
         try:
             embedding = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=api_key)
-            print("\u2705 OpenAIEmbeddings initialized.")
+            logger.debug("\u2705 OpenAIEmbeddings initialized.")
         except Exception as e:
-            print(f"\u274C Embedding init failed: {e}")
+            logger.debug(f"\u274C Embedding init failed: {e}")
             traceback.print_exc()
             return False
 
-        print("\uD83D\uDD04 Loading FAISS index...")
+        logger.debug("\uD83D\uDD04 Loading FAISS index...")
         faiss_db = FAISS.load_local("comicvine_index", embedding, allow_dangerous_deserialization=True)
         retriever = faiss_db.as_retriever()
 
-        print("\u2705 FAISS index and retriever initialized.")
+        logger.debug("\u2705 FAISS index and retriever initialized.")
         return True
 
     except Exception as e:
-        print(f"\u274C General error in initialize_ai_components: {e}")
+        logger.debug(f"\u274C General error in initialize_ai_components: {e}")
         traceback.print_exc()
         return False
 
@@ -86,7 +98,7 @@ def health_check():
 @app.route("/debug", methods=["GET"])
 def debug():
     try:
-        print("\U0001F50D /debug endpoint accessed.")
+        logger.debug("\U0001F50D /debug endpoint accessed.")
         ai_status = initialize_ai_components()
         files = os.listdir('.') if os.path.exists('.') else ["Cannot read directory"]
         return jsonify({
@@ -132,7 +144,7 @@ def ask():
         if not os.environ.get("OPENAI_API_KEY"):
             return jsonify({"error": "OpenAI API key not configured"}), 500
 
-        print(f"\U0001F4DD Question: {query}")
+        logger.debug(f"\U0001F4DD Question: {query}")
         if not initialize_ai_components():
             return jsonify({"error": "AI components failed to initialize."}), 500
 
@@ -156,12 +168,12 @@ Librarian:
         )
 
         try:
-            print("\u2699\uFE0F Running qa_chain...")
+            logger.debug("\u2699\uFE0F Running qa_chain...")
             answer = qa_chain.run(query)
-            print(f"\u2705 Answer: {answer}")
+            logger.debug(f"\u2705 Answer: {answer}")
             return jsonify({"answer": answer})
         except Exception as e:
-            print(f"\u274C Error in qa_chain: {str(e)}")
+            logger.debug(f"\u274C Error in qa_chain: {str(e)}")
             traceback.print_exc()
             return jsonify({
                 "error": f"LLM failed to process: {str(e)}",
