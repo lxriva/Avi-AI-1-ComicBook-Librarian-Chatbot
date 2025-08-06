@@ -5,6 +5,7 @@ import os
 import sys
 import traceback
 import logging
+from pydantic.v1 import ValidationError
 
 # Setup logging to ensure logs appear in Cloud Run
 logging.basicConfig(
@@ -29,6 +30,7 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 faiss_db = None
 retriever = None
 embedding = None
+
 
 def initialize_ai_components():
     global faiss_db, retriever, embedding
@@ -61,8 +63,12 @@ def initialize_ai_components():
         try:
             embedding = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=api_key)
             logger.debug("\u2705 OpenAIEmbeddings initialized.")
+        except ValidationError as ve:
+            logger.debug(f"\u274C ValidationError during embedding init: {ve}")
+            traceback.print_exc()
+            return False
         except Exception as e:
-            logger.debug(f"\u274C Embedding init failed: {e}")
+            logger.debug(f"\u274C General exception during embedding init: {e}")
             traceback.print_exc()
             return False
 
@@ -77,6 +83,7 @@ def initialize_ai_components():
         logger.debug(f"\u274C General error in initialize_ai_components: {e}")
         traceback.print_exc()
         return False
+
 
 @app.route("/", methods=["GET"])
 def health_check():
@@ -94,6 +101,7 @@ def health_check():
             "version": "1.0",
             "error": str(e)
         })
+
 
 @app.route("/debug", methods=["GET"])
 def debug():
@@ -125,6 +133,7 @@ def debug():
             "error": f"Debug error: {str(e)}",
             "traceback": traceback.format_exc()
         }), 500
+
 
 @app.route("/ask", methods=["POST", "OPTIONS"])
 def ask():
@@ -186,17 +195,21 @@ Librarian:
             "traceback": traceback.format_exc()
         }), 500
 
+
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({"error": "Endpoint not found"}), 404
+
 
 @app.errorhandler(500)
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
+
 @app.route("/favicon.ico")
 def favicon():
     return "", 204
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
