@@ -62,10 +62,10 @@ def initialize_ai_components():
             logger.debug("\u274C OPENAI_API_KEY not found.")
             return False
 
-        logger.debug(f"\U0001F512 API Key present, length={len(api_key)}")
+        logger.debug(f"\U0001F512 API Key present, length={len(api_key)}, value={api_key[:6]}...{api_key[-4:]}")
 
         try:
-            embedding = OpenAIEmbeddings(model="text-embedding-3-small", openai_api_key=api_key)
+            embedding = OpenAIEmbeddings(model="text-embedding-3-small", api_key=api_key)
             logger.debug("\u2705 OpenAIEmbeddings initialized.")
         except ValidationError as ve:
             logger.debug(f"\u274C ValidationError during embedding init: {ve}")
