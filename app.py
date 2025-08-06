@@ -5,7 +5,7 @@ import os
 import sys
 import traceback
 import logging
-from pydantic.v1 import ValidationError        
+from pydantic import ValidationError                
 import faiss
 from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS   
